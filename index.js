@@ -438,8 +438,10 @@ var ModalBox = createReactClass({
 
     if (!visible) return <View/>
 
+    var zIndex = this.props.zIndex ? { zIndex: this.props.zIndex } : {};
+
     var content = (
-      <View style={[styles.transparent, styles.absolute]} pointerEvents={'box-none'}>
+      <View style={[styles.transparent, zIndex, styles.absolute]} pointerEvents={'box-none'}>
         <View style={{ flex: 1 }} pointerEvents={'box-none'} onLayout={this.onContainerLayout}>
           {visible && this.renderBackdrop()}
           {visible && this.renderContent()}
