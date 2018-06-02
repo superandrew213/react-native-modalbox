@@ -30,7 +30,6 @@ var styles = StyleSheet.create({
   },
 
   transparent: {
-    zIndex: 2,
     backgroundColor: 'rgba(0,0,0,0)'
   },
 
@@ -60,10 +59,12 @@ var ModalBox = createReactClass({
     backdropOpacity: PropTypes.number,
     backdropColor: PropTypes.string,
     backdropContent: PropTypes.element,
+    zIndex: PropTypes.number,
     animationDuration: PropTypes.number,
     backButtonClose: PropTypes.bool,
     easing: PropTypes.func,
     coverScreen: PropTypes.bool,
+    avoidKeyboard: PropTypes.bool,
     keyboardTopOffset: PropTypes.number,
     onClosed: PropTypes.func,
     onOpened: PropTypes.func,
@@ -81,10 +82,12 @@ var ModalBox = createReactClass({
       backdropOpacity: 0.5,
       backdropColor: "black",
       backdropContent: null,
+      zIndex: 2,
       animationDuration: 400,
       backButtonClose: false,
       easing: Easing.elastic(0.8),
       coverScreen: false,
+      avoidKeyboard: true,
       keyboardTopOffset: Platform.OS == 'ios' ? 22 : 0
     };
   },
@@ -116,7 +119,7 @@ var ModalBox = createReactClass({
     this.createPanResponder();
     this.handleOpenning(this.props);
     // Needed for IOS because the keyboard covers the screen
-    if (Platform.OS === 'ios') {
+    if (this.props.avoidKeyboard && Platform.OS === 'ios') {
       this.subscriptions = [
         Keyboard.addListener('keyboardWillChangeFrame', this.onKeyboardChange),
         Keyboard.addListener('keyboardDidHide', this.onKeyboardHide)
@@ -455,13 +458,15 @@ var ModalBox = createReactClass({
    * Render the component
    */
   render: function() {
-    
+
     var visible = this.state.isOpen || this.state.isAnimateOpen || this.state.isAnimateClose;
 
     if (!visible) return <View/>
 
+    var zIndex = { zIndex: this.props.zIndex };
+
     var content = (
-      <View importantForAccessibility="yes" accessibilityViewIsModal={true} style={[styles.transparent, styles.absolute]} pointerEvents={'box-none'}>
+      <View importantForAccessibility="yes" accessibilityViewIsModal={true} style={[styles.transparent, zIndex, styles.absolute]} pointerEvents={'box-none'}>
         <View style={{ flex: 1 }} pointerEvents={'box-none'} onLayout={this.onContainerLayout}>
           {visible && this.renderBackdrop()}
           {visible && this.renderContent()}

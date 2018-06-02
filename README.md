@@ -1,7 +1,7 @@
 # react-native-modalbox
 
 [![npm](https://img.shields.io/npm/dm/react-native-modalbox.svg?maxAge=2592000)]()
-[![npm](https://img.shields.io/npm/dt/react-native-modalbox.svg?maxAge=2592000)]()   
+[![npm](https://img.shields.io/npm/dt/react-native-modalbox.svg?maxAge=2592000)]()
 
 A react native <Modal> component, easy, fully customizable, implementing the 'swipe down to close' feature.
 
@@ -32,11 +32,13 @@ Check [index.js](https://github.com/maxs15/react-native-modalbox/blob/master/Exa
 | backdropOpacity | 0.5| `number` | Opacity of the backdrop
 | backdropColor | black| `string` | backgroundColor of the backdrop
 | backdropContent | null| `ReactElement` | Add an element in the backdrop (a close button for example)
+| zIndex | 2| `number` | Change zIndex of modal
 | animationDuration | 400| `number` | Duration of the animation
 | easing | Easing.elastic(0.8) | `function` | Easing function applied to opening modal animation
 | backButtonClose | false | `bool` | (Android only) Close modal when receiving back button event
 | startOpen | false | `bool` | Allow modal to appear open without animation upon first mount
 | coverScreen | false | `bool` | Will use RN `Modal` component to cover the entire screen wherever the modal is mounted in the component hierarchy
+| avoidKeyboard | false | `bool` | Enable or disable automatically avoiding keyboard. IOS only.
 | keyboardTopOffset | ios:22, android:0 | `number` | This property prevent the modal to cover the ios status bar when the modal is scrolling up because the keyboard is opening
 
 ## Events
@@ -48,7 +50,7 @@ Check [index.js](https://github.com/maxs15/react-native-modalbox/blob/master/Exa
 | onClosingState | state `bool` | When the state of the swipe to close feature has changed (usefull to change the content of the modal, display a message for example) |
 
 ## Methods
-These methods are optional, you can use the isOpen property instead   
+These methods are optional, you can use the isOpen property instead
 
 | Prop  | Params  | Description |
 | :------------ |:---------------:| :---------------:|
