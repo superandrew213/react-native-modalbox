@@ -66,7 +66,6 @@ var ModalBox = createReactClass({
     coverScreen: PropTypes.bool,
     avoidKeyboard: PropTypes.bool,
     keyboardTopOffset: PropTypes.number,
-
     onClosed: PropTypes.func,
     onOpened: PropTypes.func,
     onClosingState: PropTypes.func,
@@ -151,7 +150,7 @@ var ModalBox = createReactClass({
    * The keyboard is hidden (IOS only)
    */
   onKeyboardHide: function(evt) {
-    this.state.keyboardOffset = 0;
+    this.setState({ keyboardOffset: 0 });
   },
 
   /*
@@ -163,29 +162,33 @@ var ModalBox = createReactClass({
     var keyboardFrame = evt.endCoordinates;
     var keyboardHeight = this.state.containerHeight - keyboardFrame.screenY;
 
-    this.state.keyboardOffset = keyboardHeight;
-    this.animateOpen();
+    this.setState({ keyboardOffset: keyboardHeight }, () => {
+      this.animateOpen();
+    });
   },
 
   /*
    * Open animation for the backdrop, will fade in
    */
   animateBackdropOpen: function() {
-    if (this.state.isAnimateBackdrop) {
+    if (this.state.isAnimateBackdrop && this.state.animBackdrop) {
       this.state.animBackdrop.stop();
-      this.state.isAnimateBackdrop = false;
     }
+    this.setState({ isAnimateBackdrop: true });
 
-    this.state.isAnimateBackdrop = true;
-    this.state.animBackdrop = Animated.timing(
+    let animBackdrop = Animated.timing(
       this.state.backdropOpacity,
       {
         toValue: 1,
-        duration: this.props.animationDuration
+        duration: this.props.animationDuration,
+        easing: this.props.easing,
+        useNativeDriver: true,
       }
-    );
-    this.state.animBackdrop.start(() => {
-      this.state.isAnimateBackdrop = false;
+    ).start(() => {
+      this.setState({
+        isAnimateBackdrop: false,
+        animBackdrop
+      });
     });
   },
 
@@ -193,21 +196,24 @@ var ModalBox = createReactClass({
    * Close animation for the backdrop, will fade out
    */
   animateBackdropClose: function() {
-    if (this.state.isAnimateBackdrop) {
+    if (this.state.isAnimateBackdrop && this.state.animBackdrop) {
       this.state.animBackdrop.stop();
-      this.state.isAnimateBackdrop = false;
     }
+    this.setState({ isAnimateBackdrop: true });
 
-    this.state.isAnimateBackdrop = true;
-    this.state.animBackdrop = Animated.timing(
+    let animBackdrop = Animated.timing(
       this.state.backdropOpacity,
       {
         toValue: 0,
-        duration: this.props.animationDuration
+        duration: this.props.animationDuration,
+        easing: this.props.easing,
+        useNativeDriver: true,
       }
-    );
-    this.state.animBackdrop.start(() => {
-      this.state.isAnimateBackdrop = false;
+    ).start(() => {
+      this.setState({
+        isAnimateBackdrop: false,
+        animBackdrop
+      });
     });
   },
 
@@ -217,7 +223,7 @@ var ModalBox = createReactClass({
   stopAnimateOpen: function() {
     if (this.state.isAnimateOpen) {
       if (this.state.animOpen) this.state.animOpen.stop();
-      this.state.isAnimateOpen = false;
+      this.setState({ isAnimateOpen: false });
     }
   },
 
@@ -231,29 +237,34 @@ var ModalBox = createReactClass({
     if (this.props.backdrop)
       this.animateBackdropOpen();
 
-    this.state.isAnimateOpen = true;
-
-    requestAnimationFrame(() => {
-      // Detecting modal position
-      this.state.positionDest = this.calculateModalPosition(this.state.containerHeight - this.state.keyboardOffset, this.state.containerWidth);
-      if (this.state.keyboardOffset && (this.state.positionDest < this.props.keyboardTopOffset)) {
-        this.state.positionDest = this.props.keyboardTopOffset;
-      }
-      this.state.animOpen = Animated.timing(
-        this.state.position,
-        {
-          toValue: this.state.positionDest,
-          duration: this.props.animationDuration,
-          easing: this.props.easing,
+    this.setState({
+      isAnimateOpen: true,
+      isOpen: true,
+    }, () => {
+      requestAnimationFrame(() => {
+        // Detecting modal position
+        let positionDest = this.calculateModalPosition(this.state.containerHeight - this.state.keyboardOffset, this.state.containerWidth);
+        if (this.state.keyboardOffset && (positionDest < this.props.keyboardTopOffset)) {
+          positionDest = this.props.keyboardTopOffset;
         }
-      );
-      this.state.animOpen.start(() => {
-        if (!this.state.isOpen && this.props.onOpened) this.props.onOpened();
-        this.state.isAnimateOpen = false;
-        this.state.isOpen = true;
-      });
-    })
-
+        let animOpen = Animated.timing(
+          this.state.position,
+          {
+            toValue: positionDest,
+            duration: this.props.animationDuration,
+            easing: this.props.easing,
+            useNativeDriver: true,
+          }
+        ).start(() => {
+          this.setState({
+            isAnimateOpen: false,
+            animOpen,
+            positionDest
+          });
+          if (this.props.onOpened) this.props.onOpened();
+        });
+      })
+    });
   },
 
   /*
@@ -262,7 +273,7 @@ var ModalBox = createReactClass({
   stopAnimateClose: function() {
     if (this.state.isAnimateClose) {
       if (this.state.animClose) this.state.animClose.stop();
-      this.state.isAnimateClose = false;
+      this.setState({ isAnimateClose: false });
     }
   },
 
@@ -276,20 +287,26 @@ var ModalBox = createReactClass({
     if (this.props.backdrop)
       this.animateBackdropClose();
 
-    this.state.isAnimateClose = true;
-    this.state.animClose = Animated.timing(
-      this.state.position,
-      {
-        toValue: this.props.entry === 'top' ? -this.state.containerHeight : this.state.containerHeight,
-        duration: this.props.animationDuration
-      }
-    );
-    this.state.animClose.start(() => {
-      Keyboard.dismiss();
-      this.state.isAnimateClose = false;
-      this.state.isOpen = false;
-      this.setState({});
-      if (this.props.onClosed) this.props.onClosed();
+    this.setState({
+      isAnimateClose: true,
+      isOpen: false,
+    }, () => {
+      let animClose = Animated.timing(
+        this.state.position,
+        {
+          toValue: this.props.entry === 'top' ? -this.state.containerHeight : this.state.containerHeight,
+          duration: this.props.animationDuration,
+          easing: this.props.easing,
+          useNativeDriver: true,
+        }
+      ).start(() => {
+        // Keyboard.dismiss();   // make this optional. Easily user defined in .onClosed() callback
+        this.setState({
+          isAnimateClose: false,
+          animClose
+        });
+        if (this.props.onClosed) this.props.onClosed();
+      });
     });
   },
 
@@ -323,8 +340,9 @@ var ModalBox = createReactClass({
       inSwipeArea = false;
       if (this.props.entry === 'top' ? -state.dy > this.props.swipeThreshold : state.dy > this.props.swipeThreshold)
         this.animateClose();
-      else
+      else if (!this.state.isOpen) {
         this.animateOpen();
+      }
     };
 
     var animEvt = Animated.event([null, {customY: this.state.position}]);
@@ -349,11 +367,13 @@ var ModalBox = createReactClass({
       return true;
     };
 
-    this.state.pan = PanResponder.create({
-      onStartShouldSetPanResponder: onPanStart,
-      onPanResponderMove: onPanMove,
-      onPanResponderRelease: onPanRelease,
-      onPanResponderTerminate: onPanRelease,
+    this.setState({
+      pan: PanResponder.create({
+        onStartShouldSetPanResponder: onPanStart,
+        onPanResponderMove: onPanMove,
+        onPanResponderRelease: onPanRelease,
+        onPanResponderTerminate: onPanRelease,
+      }),
     });
   },
 
@@ -407,7 +427,7 @@ var ModalBox = createReactClass({
     if (this.props.backdrop) {
       backdrop = (
         <TouchableWithoutFeedback onPress={this.props.backdropPressToClose ? this.close : null}>
-          <Animated.View style={[styles.absolute, {opacity: this.state.backdropOpacity}]}>
+          <Animated.View importantForAccessibility="no" style={[styles.absolute, {opacity: this.state.backdropOpacity}]}>
             <View style={[styles.absolute, {backgroundColor:this.props.backdropColor, opacity: this.props.backdropOpacity}]}/>
             {this.props.backdropContent || []}
           </Animated.View>
@@ -427,6 +447,7 @@ var ModalBox = createReactClass({
         onLayout={this.onViewLayout}
         style={[styles.wrapper, size, this.props.style, {transform: [{translateY: this.state.position}, {translateX: offsetX}]} ]}
         {...this.state.pan.panHandlers}>
+        {this.props.backdropPressToClose && <TouchableWithoutFeedback onPress={this.close}><View style={[styles.absolute]} /></TouchableWithoutFeedback>}
         {this.props.children}
       </Animated.View>
     )
@@ -436,6 +457,7 @@ var ModalBox = createReactClass({
    * Render the component
    */
   render: function() {
+
     var visible = this.state.isOpen || this.state.isAnimateOpen || this.state.isAnimateClose;
 
     if (!visible) return <View/>
@@ -443,7 +465,7 @@ var ModalBox = createReactClass({
     var zIndex = this.props.zIndex ? { zIndex: this.props.zIndex } : {};
 
     var content = (
-      <View style={[styles.transparent, zIndex, styles.absolute]} pointerEvents={'box-none'}>
+      <View importantForAccessibility="yes" accessibilityViewIsModal={true} style={[styles.transparent, zIndex, styles.absolute]} pointerEvents={'box-none'}>
         <View style={{ flex: 1 }} pointerEvents={'box-none'} onLayout={this.onContainerLayout}>
           {visible && this.renderBackdrop()}
           {visible && this.renderContent()}
@@ -451,10 +473,18 @@ var ModalBox = createReactClass({
       </View>
     )
 
-    if (!this.props.coverScreen) return content;
+if (!this.props.coverScreen) return content;
 
     return (
-      <Modal onRequestClose={() => this.close()} supportedOrientations={['landscape', 'portrait']} transparent visible={visible}>
+      <Modal
+        onRequestClose={() => {
+          if (this.props.backButtonClose) {
+            this.close()
+          }
+        }}
+        supportedOrientations={['landscape', 'portrait', 'portrait-upside-down']} transparent visible={visible}
+        hardwareAccelerated={true}
+      >
         {content}
       </Modal>
     );
