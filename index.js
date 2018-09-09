@@ -30,7 +30,6 @@ var styles = StyleSheet.create({
   },
 
   transparent: {
-    zIndex: 2,
     backgroundColor: 'rgba(0,0,0,0)'
   },
 
@@ -66,6 +65,7 @@ var ModalBox = createReactClass({
     coverScreen: PropTypes.bool,
     avoidKeyboard: PropTypes.bool,
     keyboardTopOffset: PropTypes.number,
+    zIndex: PropTypes.number,
     onClosed: PropTypes.func,
     onOpened: PropTypes.func,
     onClosingState: PropTypes.func,
@@ -87,7 +87,8 @@ var ModalBox = createReactClass({
       easing: Easing.elastic(0.8),
       coverScreen: false,
       avoidKeyboard: false,
-      keyboardTopOffset: Platform.OS == 'ios' ? 22 : 0
+      keyboardTopOffset: Platform.OS == 'ios' ? 22 : 0,
+      zIndex: 2,
     };
   },
 
@@ -462,7 +463,7 @@ var ModalBox = createReactClass({
 
     if (!visible) return <View/>
 
-    var zIndex = this.props.zIndex ? { zIndex: this.props.zIndex } : {};
+    var zIndex = { zIndex: this.props.zIndex };
 
     var content = (
       <View importantForAccessibility="yes" accessibilityViewIsModal={true} style={[styles.transparent, zIndex, styles.absolute]} pointerEvents={'box-none'}>
